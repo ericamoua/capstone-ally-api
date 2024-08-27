@@ -32,7 +32,7 @@ connection.connect(function (err) {
 
 // Endpoint to fetch data from MySQL database
 //TODO: replace with your MySQL query
-app.get('/api', (req, res) => {
+app.get('/contactForm', (req, res) => {
     // Add your MySQL query logic here
     const {  } = req.query;
 

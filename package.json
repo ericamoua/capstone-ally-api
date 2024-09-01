@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node app",
-    "build": "echo 'No build step'"
+    "start": "node app"
   },
   "author": "",
   "license": "ISC",

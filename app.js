@@ -1,61 +1,138 @@
 const express = require('express');
+const session = require('express-session');
+const passport = require('passport');
 const cors = require('cors');
-const mysql = require('mysql2');
-const path = require('path');
+const bodyParser = require('body-parser');
+const bcrypt = require('bcrypt');
 require('dotenv').config();
+const crypto = require('crypto');
+
+
+
+
+
+
+
+
+//require pass port config file
+const passportConfig = require('./passport-config.js'); // Ensure correct path
+const db = require('./Database.js');
+
 
 const app = express();
-app.use(cors());
-app.use(express.json()); // Parse JSON bodies
-app.use(express.static(path.join(__dirname, 'build')));
-app.use('/images', express.static(path.join(__dirname, 'src', 'images')));
 
-const PORT = process.env.PORT || 8080;
+// set up cors to work with front end and back end, also allows CRUD ops
+const corsOptions = {
+    origin: ['http://localhost:5174', 'http://localhost:30004'], // Adjust as necessary
+    optionsSuccessStatus: 200,
+    methods: 'GET,POST,PUT,DELETE',
+    credentials: true,
+};
+app.use(cors(corsOptions));
 
-// MySQL connection setup
-//TODO: replace with your MySQL credentials
-const connection = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    database: process.env.DB_NAME,
-    port: process.env.DB_PORT,
-    password: process.env.DB_PASS
-});
 
-connection.connect(function (err) {
-    if (err) {
-        console.error("Failed to connect to MySQL: ", err);
-        return;
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+
+//create sesssions(stores cookies)
+app.use(session({
+    secret: process.env.SESSION_SECRET, 
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false } 
+}));
+
+
+
+
+// Initialize Passport and session handling
+app.use(passport.initialize());
+app.use(passport.session());
+
+// uses passport config file
+passportConfig(passport);
+
+// routes for authetication
+const authRoutes = require('./routes/auth.js');
+app.use('/auth', authRoutes);
+
+
+// Login route
+app.post('/api/login', passport.authenticate('local'), (req, res) => {
+    if (req.isAuthenticated()) {
+        res.json({
+            message: 'Login successful',
+            isAdmin: req.user.is_admin,
+        });
+    } else {
+        res.status(401).json({ message: 'Login failed' });
     }
-    console.log("Connected to MySQL");
 });
 
-// Endpoint to fetch data from MySQL database
-//TODO: replace with your MySQL query
-app.get('/contactForm', (req, res) => {
-    // Add your MySQL query logic here
-    const {  } = req.query;
+// Signup route
+app.post('/api/signup', async (req, res) => {
+    const { username, password, isAdmin } = req.body;
+    if (!username || !password) {
+        return res.status(400).json({ message: 'Username and password are required' });
+    }
 
-    // TODO: replace with your MySQL query
-    let query = 'SELECT * FROM your_table';
-    const queryParams = [];
-
-    connection.query(query, queryParams, (error, results) => {
-        if (error) {
-            console.error("Error executing MySQL query: ", error);
-            res.status(500).json({ error: "Error executing MySQL query" });
-            return;
+    try {
+        // Check if user email is in databasse
+        const [rows] = await db.execute('SELECT * FROM users WHERE email = ?', [username]);
+        if (rows.length > 0) {
+            return res.status(400).json({ message: 'Username already exists' });
         }
-        res.json(results);
+
+        // Hash the password and insert new user
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await db.execute('INSERT INTO users (email, password, is_admin) VALUES (?, ?, ?)', [username, hashedPassword, isAdmin || false]);
+        res.status(201).json({ message: 'User created successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Route to select all users from users table
+app.get('/api/users', async (req, res) => {
+    try {
+        const [rows] = await db.execute('SELECT * FROM users');
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'An error occurred while fetching users.' });
+    }
+});
+
+// Logout route
+//needds work
+app.get('/api/logout', (req, res) => {
+    req.logout((err) => {
+        if (err) {
+            console.error('Logout error:', err);
+            return res.status(500).json({ message: 'Logout failed' });
+        }
+        res.json({ message: 'Logout successful' });
     });
 });
 
 
-// Catch-all handler to serve React app for unknown routes
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'build', 'index.html'));
-});
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Start the server
+app.listen(30004, () => {
+    console.log('Server running on port 30003');
 });

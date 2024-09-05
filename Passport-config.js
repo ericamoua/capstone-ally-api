@@ -11,7 +11,7 @@ module.exports = function(passport) {
     passport.use(new GoogleStrategy({
         clientID: process.env.CLIENT_ID, 
         clientSecret: process.env.CLIENT_SECRET,
-        callbackURL: 'http://localhost:30003/auth/google/callback',
+        callbackURL: 'https://capstone-ally-api.vercel.app/auth/google/callback',
         scope: ['profile', 'email']
     },
     (accessToken, refreshToken, profile, done) => {

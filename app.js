@@ -23,11 +23,11 @@ const app = express();
 
 // set up cors to work with front end and back end, also allows CRUD ops
 const corsOptions = {
-    origin: ['https://main.d2m4jxyp4by48k.amplifyapp.com', 'https://capstone-ally-api.vercel.app'], // Adjust as necessary
-    optionsSuccessStatus: 200,
+    origin: ['https://main.d2m4jxyp4by48k.amplifyapp.com'], 
     methods: 'GET,POST,PUT,DELETE',
     credentials: true,
 };
+
 app.use(cors(corsOptions));
 
 
@@ -117,8 +117,6 @@ app.get('/api/logout', (req, res) => {
         res.json({ message: 'Logout successful' });
     });
 });
-
-
 
 
 

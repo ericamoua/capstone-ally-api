@@ -23,7 +23,7 @@ const app = express();
 
 // set up cors to work with front end and back end, also allows CRUD ops
 const corsOptions = {
-    origin: ['http://localhost:5174', 'http://localhost:30004'], // Adjust as necessary
+    origin: ['https://main.d2m4jxyp4by48k.amplifyapp.com', 'https://capstone-ally-api.vercel.app'], // Adjust as necessary
     optionsSuccessStatus: 200,
     methods: 'GET,POST,PUT,DELETE',
     credentials: true,

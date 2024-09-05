@@ -15,7 +15,7 @@ const crypto = require('crypto');
 
 
 //require pass port config file
-const passportConfig = require('./passport-config.js'); // Ensure correct path
+const passportConfig = require('./Passport-config.js'); // Ensure correct path
 const db = require('./Database.js');
 
 
